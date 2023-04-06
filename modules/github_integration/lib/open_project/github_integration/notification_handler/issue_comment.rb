@@ -47,7 +47,7 @@ module OpenProject::GithubIntegration
         github_system_user = User.find_by(id: payload.open_project_user_id)
         work_packages = find_mentioned_work_packages(payload.comment.body, github_system_user)
 
-        new_work_packages = without_already_referenced(work_packages, pull_request)
+        new_work_packages = without_already_referenced(work_packages, pull_request&.work_packages.to_a || [])
         return unless new_work_packages.any?
 
         pull_request = upsert_partial_pull_request(new_work_packages)
