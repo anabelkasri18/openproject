@@ -31,7 +31,7 @@ class Timestamp
 
   class Exception < StandardError; end
 
-  class ISO8601Parser
+  class TimestampParser
     def initialize(string)
       @iso8601_string = string
     end
@@ -45,7 +45,7 @@ class Timestamp
         Time.zone.iso8601(@iso8601_string).iso8601
       end
     rescue ArgumentError => e
-      raise e.class, "The string \"#{@iso8601_string}\" cannot be parsed to Time or ActiveSupport::Duration."
+      raise e.class, "The string \"#{@iso8601_string}\" cannot be parsed to a Timestamp."
     end
 
     class << self
@@ -86,7 +86,7 @@ class Timestamp
     def parse(iso8601_string)
       return iso8601_string if iso8601_string.is_a?(Timestamp)
 
-      iso8601_string = ISO8601Parser.new(iso8601_string.strip).parse!
+      iso8601_string = TimestampParser.new(iso8601_string.strip).parse!
       new(iso8601_string)
     end
 
@@ -106,9 +106,9 @@ class Timestamp
 
   def initialize(arg = Timestamp.now.to_s)
     if arg.is_a? String
-      @timestamp_iso8601_string = ISO8601Parser.substitute_special_shortcut_values(arg)
+      @timestamp_string = TimestampParser.substitute_special_shortcut_values(arg)
     elsif arg.respond_to? :iso8601
-      @timestamp_iso8601_string = arg.iso8601
+      @timestamp_string = arg.iso8601
     else
       raise Timestamp::Exception,
             "Argument type not supported. " \
@@ -129,7 +129,7 @@ class Timestamp
   end
 
   def iso8601
-    @timestamp_iso8601_string.to_s
+    @timestamp_string.to_s
   end
 
   def to_iso8601
@@ -146,7 +146,7 @@ class Timestamp
 
   def to_time
     if relative?
-      Time.zone.now - (to_duration * (to_duration.to_i.positive? ? 1 : -1))
+      Time.zone.now - to_duration.abs
     else
       Time.zone.parse(self)
     end
